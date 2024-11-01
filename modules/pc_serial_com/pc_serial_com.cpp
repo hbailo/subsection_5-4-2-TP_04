@@ -12,8 +12,9 @@
 #include "temperature_sensor.h"
 #include "gas_sensor.h"
 #include "event_log.h"
-
+#include <cstring>
 //=====[Declaration of private defines]========================================
+#define DATE_AND_TIME_FORMAT_LENGTH 19  // Format: "YYYY-MM-DDThh:mm:ss"
 
 //=====[Declaration of private data types]=====================================
 
@@ -21,6 +22,7 @@ typedef enum{
     PC_SERIAL_COMMANDS,
     PC_SERIAL_GET_CODE,
     PC_SERIAL_SAVE_NEW_CODE,
+    PC_SERIAL_SETTING_DATE_AND_TIME
 } pcSerialComMode_t;
 
 //=====[Declaration and initialization of public global objects]===============
@@ -38,6 +40,7 @@ char codeSequenceFromPcSerialCom[CODE_NUMBER_OF_KEYS];
 static pcSerialComMode_t pcSerialComMode = PC_SERIAL_COMMANDS;
 static bool codeComplete = false;
 static int numberOfCodeChars = 0;
+static int numberOfDateAndTimeChars = 0;
 
 //=====[Declarations (prototypes) of private functions]========================
 
@@ -47,6 +50,7 @@ static void pcSerialComGetCodeUpdate( char receivedChar );
 static void pcSerialComSaveNewCodeUpdate( char receivedChar );
 
 static void pcSerialComCommandUpdate( char receivedChar );
+static void pcSerialComSetDateAndTimeUpdate(char receiverChar);
 
 static void availableCommands();
 static void commandShowCurrentAlarmState();
@@ -59,6 +63,7 @@ static void commandShowCurrentTemperatureInFahrenheit();
 static void commandSetDateAndTime();
 static void commandShowDateAndTime();
 static void commandShowStoredEvents();
+
 
 //=====[Implementations of public functions]===================================
 
@@ -86,6 +91,7 @@ void pcSerialComUpdate()
     char receivedChar = pcSerialComCharRead();
     if( receivedChar != '\0' ) {
         switch ( pcSerialComMode ) {
+
             case PC_SERIAL_COMMANDS:
                 pcSerialComCommandUpdate( receivedChar );
             break;
@@ -97,6 +103,11 @@ void pcSerialComUpdate()
             case PC_SERIAL_SAVE_NEW_CODE:
                 pcSerialComSaveNewCodeUpdate( receivedChar );
             break;
+            
+            case PC_SERIAL_SETTING_DATE_AND_TIME:
+                pcSerialComSetDateAndTimeUpdate(receivedChar);
+            break;
+                  
             default:
                 pcSerialComMode = PC_SERIAL_COMMANDS;
             break;
@@ -253,41 +264,12 @@ static void commandShowCurrentTemperatureInFahrenheit()
 
 static void commandSetDateAndTime()
 {
-    char year[5] = "";
-    char month[3] = "";
-    char day[3] = "";
-    char hour[3] = "";
-    char minute[3] = "";
-    char second[3] = "";
-    
-    pcSerialComStringWrite("\r\nType four digits for the current year (YYYY): ");
-    pcSerialComStringRead( year, 4);
-    pcSerialComStringWrite("\r\n");
 
-    pcSerialComStringWrite("Type two digits for the current month (01-12): ");
-    pcSerialComStringRead( month, 2);
-    pcSerialComStringWrite("\r\n");
+  pcSerialComStringWrite("Please enter date and time in the YYYY-MM-DDThh:mm:ss");
+  
+  pcSerialComMode = PC_SERIAL_SETTING_DATE_AND_TIME;
+  numberOfDateAndTimeChars = 0;
 
-    pcSerialComStringWrite("Type two digits for the current day (01-31): ");
-    pcSerialComStringRead( day, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current hour (00-23): ");
-    pcSerialComStringRead( hour, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current minutes (00-59): ");
-    pcSerialComStringRead( minute, 2);
-    pcSerialComStringWrite("\r\n");
-
-    pcSerialComStringWrite("Type two digits for the current seconds (00-59): ");
-    pcSerialComStringRead( second, 2);
-    pcSerialComStringWrite("\r\n");
-    
-    pcSerialComStringWrite("Date and time has been set\r\n");
-
-    dateAndTimeWrite( atoi(year), atoi(month), atoi(day), 
-        atoi(hour), atoi(minute), atoi(second) );
 }
 
 static void commandShowDateAndTime()
@@ -307,4 +289,48 @@ static void commandShowStoredEvents()
         pcSerialComStringWrite( str );   
         pcSerialComStringWrite( "\r\n" );                    
     }
+}
+
+static void pcSerialComSetDateAndTimeUpdate(char receivedChar)
+{
+  
+    static char date_and_time_input[DATE_AND_TIME_FORMAT_LENGTH + 1];
+
+    // Save input char to buffer
+    date_and_time_input[numberOfDateAndTimeChars] = receivedChar;
+    numberOfDateAndTimeChars++;
+
+    if (numberOfDateAndTimeChars >= DATE_AND_TIME_FORMAT_LENGTH) { // Parsing
+        char year[5];
+        strncpy(year, date_and_time_input + 0, 4);
+        year[4] = '\0';
+
+        char month[3];
+        strncpy(year, date_and_time_input + 5, 2);
+        month[2] = '\0';        
+
+        char day[3];
+        strncpy(year, date_and_time_input + 9, 2);
+        day[2] = '\0';
+
+        char hour[3];
+        strncpy(year, date_and_time_input + 11, 2);
+        day[2] = '\0';         
+
+        char minute[3];
+        strncpy(year, date_and_time_input + 14, 2);
+        minute[2] = '\0'; 
+
+        char second[3];
+        strncpy(year, date_and_time_input + 16, 2);
+        second[2] = '\0'; 
+
+        dateAndTimeWrite(atoi(year), atoi(month), atoi(day), atoi(hour), atoi(minute), atoi(second));
+
+        pcSerialComStringWrite("\r\nNew date and time setted.\r\n\r\n");
+
+        numberOfCodeChars = 0;
+        pcSerialComMode = PC_SERIAL_COMMANDS;
+    }
+
 }
