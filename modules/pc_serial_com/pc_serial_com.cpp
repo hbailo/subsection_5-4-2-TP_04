@@ -13,6 +13,7 @@
 #include "gas_sensor.h"
 #include "event_log.h"
 #include <cstring>
+
 //=====[Declaration of private defines]========================================
 #define DATE_AND_TIME_FORMAT_LENGTH 19  // Format: "YYYY-MM-DDThh:mm:ss"
 
@@ -43,9 +44,6 @@ static int numberOfCodeChars = 0;
 static int numberOfDateAndTimeChars = 0;
 
 //=====[Declarations (prototypes) of private functions]========================
-
-static void pcSerialComStringRead( char* str, int strLength );
-
 static void pcSerialComGetCodeUpdate( char receivedChar );
 static void pcSerialComSaveNewCodeUpdate( char receivedChar );
 
@@ -126,16 +124,6 @@ void pcSerialComCodeCompleteWrite( bool state )
 }
 
 //=====[Implementations of private functions]==================================
-
-static void pcSerialComStringRead( char* str, int strLength )
-{
-    int strIndex;
-    for ( strIndex = 0; strIndex < strLength; strIndex++) {
-        uartUsb.read( &str[strIndex] , 1 );
-        uartUsb.write( &str[strIndex] ,1 );
-    }
-    str[strLength]='\0';
-}
 
 static void pcSerialComGetCodeUpdate( char receivedChar )
 {
