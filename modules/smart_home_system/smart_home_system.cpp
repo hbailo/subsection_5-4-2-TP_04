@@ -39,7 +39,7 @@ void smartHomeSystemUpdate()
     fireAlarmUpdate();    
     pcSerialComUpdate();
     eventLogUpdate();
-    delay(SYSTEM_TIME_INCREMENT_MS);
+
 }
 
 //=====[Implementations of private functions]==================================

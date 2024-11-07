@@ -13,7 +13,7 @@
 //=====[Declaration and initialization of public global objects]===============
 
 DigitalOut strobeLight(LED1);
-
+Timer StrobeTimer;
 //=====[Declaration of external public global variables]=======================
 
 //=====[Declaration and initialization of public global variables]=============
@@ -43,15 +43,16 @@ void strobeLightStateWrite( bool state )
 
 void strobeLightUpdate( int strobeTime )
 {
-    static int accumulatedTimeAlarm = 0;
-    accumulatedTimeAlarm = accumulatedTimeAlarm + SYSTEM_TIME_INCREMENT_MS;
-    
+       
     if( strobeLightState ) {
-        if( accumulatedTimeAlarm >= strobeTime ) {
-            accumulatedTimeAlarm = 0;
+        StrobeTimer.start();
+
+        if( StrobeTimer.read_ms() >= strobeTime ) {
             strobeLight= !strobeLight;
         }
     } else {
+        StrobeTimer.stop();
+        StrobeTimer.reset();
         strobeLight = OFF;
     }
 }

@@ -33,18 +33,19 @@ DigitalIn keypadColPins[MATRIX_KEYPAD_NUMBER_OF_COLS]  = {PB_12, PB_13, PB_15, P
 //=====[Declaration and initialization of private global variables]============
 
 static matrixKeypadState_t matrixKeypadState;
-static int timeIncrement_ms = 0;
+Timer Debouncetimer;
 
 //=====[Declarations (prototypes) of private functions]========================
 
 static char matrixKeypadScan();
 static void matrixKeypadReset();
 
+
 //=====[Implementations of public functions]===================================
 
 void matrixKeypadInit( int updateTime_ms )
 {
-    timeIncrement_ms = updateTime_ms;
+
     matrixKeypadState = MATRIX_KEYPAD_SCANNING;
     int pinIndex = 0;
     for( pinIndex=0; pinIndex<MATRIX_KEYPAD_NUMBER_OF_COLS; pinIndex++ ) {
@@ -54,7 +55,7 @@ void matrixKeypadInit( int updateTime_ms )
 
 char matrixKeypadUpdate()
 {
-    static int accumulatedDebounceMatrixKeypadTime = 0;
+    
     static char matrixKeypadLastKeyPressed = '\0';
 
     char keyDetected = '\0';
@@ -63,17 +64,20 @@ char matrixKeypadUpdate()
     switch( matrixKeypadState ) {
 
     case MATRIX_KEYPAD_SCANNING:
+        Debouncetimer.reset();
+        Debouncetimer.stop();
         keyDetected = matrixKeypadScan();
         if( keyDetected != '\0' ) {
             matrixKeypadLastKeyPressed = keyDetected;
-            accumulatedDebounceMatrixKeypadTime = 0;
+            Debouncetimer.start();
             matrixKeypadState = MATRIX_KEYPAD_DEBOUNCE;
         }
         break;
 
     case MATRIX_KEYPAD_DEBOUNCE:
-        if( accumulatedDebounceMatrixKeypadTime >=
+        if( Debouncetimer.read_ms() >=
             DEBOUNCE_KEY_TIME_MS ) {
+            Debouncetimer.reset();
             keyDetected = matrixKeypadScan();
             if( keyDetected == matrixKeypadLastKeyPressed ) {
                 matrixKeypadState = MATRIX_KEYPAD_KEY_HOLD_PRESSED;
@@ -81,8 +85,7 @@ char matrixKeypadUpdate()
                 matrixKeypadState = MATRIX_KEYPAD_SCANNING;
             }
         }
-        accumulatedDebounceMatrixKeypadTime =
-            accumulatedDebounceMatrixKeypadTime + timeIncrement_ms;
+        
         break;
 
     case MATRIX_KEYPAD_KEY_HOLD_PRESSED:
