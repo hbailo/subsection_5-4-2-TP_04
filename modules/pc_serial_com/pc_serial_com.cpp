@@ -294,23 +294,23 @@ static void pcSerialComSetDateAndTimeUpdate(char receivedChar)
         year[4] = '\0';
 
         char month[3];
-        strncpy(year, date_and_time_input + 5, 2);
+        strncpy(month, date_and_time_input + 5, 2);
         month[2] = '\0';        
 
         char day[3];
-        strncpy(year, date_and_time_input + 9, 2);
+        strncpy(day, date_and_time_input + 8, 2);
         day[2] = '\0';
 
         char hour[3];
-        strncpy(year, date_and_time_input + 11, 2);
+        strncpy(hour, date_and_time_input + 11, 2);
         day[2] = '\0';         
 
         char minute[3];
-        strncpy(year, date_and_time_input + 14, 2);
+        strncpy(minute, date_and_time_input + 14, 2);
         minute[2] = '\0'; 
 
         char second[3];
-        strncpy(year, date_and_time_input + 16, 2);
+        strncpy(second, date_and_time_input + 17, 2);
         second[2] = '\0'; 
 
         dateAndTimeWrite(atoi(year), atoi(month), atoi(day), atoi(hour), atoi(minute), atoi(second));
